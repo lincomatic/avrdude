@@ -372,6 +372,8 @@ int main(int argc, char * argv [])
   else
     progname = argv[0];
 
+  avrdude_message(MSG_INFO,"%s: *** SCL version ***\n",progname);
+
   default_parallel[0] = 0;
   default_serial[0]   = 0;
   default_bitclock    = 0.0;

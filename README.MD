@@ -7,6 +7,9 @@ added support for multiple USBasp programmers.
 e.g. in a system with 2 USBasp's plugged in
 
 select first USBasp
+
 avrdude -c usbasp -p m328p -P idx:0
+
 select second USBasp
+
 avrdude -c usbasp -p m328p -P idx:0
