@@ -17,7 +17,7 @@ $ avrdude -cusbasp -pm328p -P3:1
 Tip: to find a bus/device numbers of a particular USBasp, remove all other USBasps, and plug just one USBasp into the target USB port. Then run avrdude without the -P parameter:
 ```
 $ avrdude -c usbasp -p m328p
-avrdude: \*** SCL version ***
+avrdude: *** SCL version ***
 avrdude: Found USBasp, bus:device: 3:3
 ```
 
