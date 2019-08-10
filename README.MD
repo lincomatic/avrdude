@@ -39,7 +39,21 @@ $ avrdude -c usbasp -p m328p -P idx:0
 ## BUILDING
 ```
 sudo apt-get install libusb-1.0-0-dev flex bison
-./configure
-make
-make install
+$ ./configure
+$ make
+$ make install
 ```
+
+If make fails with
+```
+/bin/bash: aclocal-1.15: command not found
+Makefile:706: recipe for target 'aclocal.m4' failed
+make: *** [aclocal.m4] Error 127
+```
+do
+```
+$ apt install autoconf libtool
+$ autoreconf -f -i
+```
+then try again from the ./configure step
+ 
