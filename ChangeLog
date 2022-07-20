@@ -1,3 +1,8 @@
+2022-07-19 Sam C. Lin <lincomatic@hotmail.com>
+
+	* added code for -PS option w/ -cUSBasp to scan for all attached USBasps
+	* -P for USBasp now recurses through parents instead of just bus:port
+	
 2016-02-16  Joerg Wunsch <j.gnu@uriah.heep.sax.de>
 
 	* configure.ac: Released version 6.3.
