@@ -1,3 +1,4 @@
+#define LINCOMATIC_VERSION "-lincomatic-1.0"
 /*
  * avrdude - A Downloader/Uploader for AVR device programmers
  * Copyright (C) 2000-2005  Brian S. Dean <bsd@bsdhome.com>
@@ -129,8 +130,8 @@ static void usage(void)
  "  -q                         Quell progress output. -q -q for less.\n"
  "  -l logfile                 Use logfile rather than stderr for diagnostics.\n"
  "  -?                         Display this usage.\n"
- "\navrdude version %s, URL: <https://github.com/avrdudes/avrdude>\n"
-          ,progname, version);
+ "\navrdude version %s%s, URL: <https://github.com/avrdudes/avrdude>\n"
+                  ,progname, version,LINCOMATIC_VERSION);
 }
 
 
@@ -379,6 +380,8 @@ int main(int argc, char * argv [])
     progname++;
   else
     progname = argv[0];
+
+  avrdude_message(MSG_INFO,"%s %s%s: built %s %s\n",progname,version,LINCOMATIC_VERSION,__DATE__,__TIME__);
 
   default_parallel[0] = 0;
   default_serial[0]   = 0;

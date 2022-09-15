@@ -160,7 +160,7 @@ static int usbasp_transmit(PROGRAMMER * pgm, unsigned char receive,
 			   unsigned char functionid, const unsigned char *send,
 			   unsigned char *buffer, int buffersize);
 #ifdef USE_LIBUSB_1_0
-static int usbOpenDevice(libusb_device_handle **device, int vendor, char *vendorName, int product, char *productName);
+static int usbOpenDevice(libusb_device_handle **device, int vendor, char *vendorName, int product, char *productName,char *port);
 #else
 static int usbOpenDevice(usb_dev_handle **device, int vendor, char *vendorName, int product, char *productName);
 #endif
@@ -328,6 +328,17 @@ static int usbasp_transmit(PROGRAMMER * pgm,
   return nbytes;
 }
 
+char *get_uport(libusb_device *dev)
+{
+  static char p[256];
+  p[0] = 0;
+  do {
+    sprintf(p+strlen(p),"%d:%d",libusb_get_bus_number(dev),libusb_get_port_number(dev));
+    dev = libusb_get_parent(dev);
+    if (dev) strcat(p,".");
+  } while(dev);
+  return p;
+}
 
 /*
  * Try to open USB device with given VID, PID, vendor and product name
@@ -337,13 +348,15 @@ static int usbasp_transmit(PROGRAMMER * pgm,
  */
 #ifdef USE_LIBUSB_1_0
 static int usbOpenDevice(libusb_device_handle **device, int vendor,
-			 char *vendorName, int product, char *productName)
+			 char *vendorName, int product, char *productName,
+                         char *port)
 {
     libusb_device_handle *handle = NULL;
     int                  errorCode = USB_ERROR_NOTFOUND;
     static int           didUsbInit = 0;
     int j;
     int r;
+    char *uport;
 
     if(!didUsbInit){
         didUsbInit = 1;
@@ -352,6 +365,8 @@ static int usbOpenDevice(libusb_device_handle **device, int vendor,
     
     libusb_device **dev_list;
     int dev_list_len = libusb_get_device_list(ctx, &dev_list);
+
+    if (*port == 'S') avrdude_message(MSG_INFO, "Scanning for USBasps...\n");
 
     for (j=0; j<dev_list_len; ++j) {
         libusb_device *dev = dev_list[j];
@@ -367,7 +382,23 @@ static int usbOpenDevice(libusb_device_handle **device, int vendor,
                                  progname, errstr(r));
                     continue;
             }
-            errorCode = 0;
+
+	    uport = get_uport(dev);
+	    if (*port == 'S') {
+	      avrdude_message(MSG_INFO, "%s: Found USBasp: %s\n",progname,
+			      uport);
+	      continue;
+	    }
+            else if (strcmp(port,"usb") && strcmp(uport,port)) {
+              continue;
+            }
+            else {
+              avrdude_message(MSG_INFO, "%s: Found USBasp, port: %s\n",progname, uport);
+              errorCode = 0;
+            }
+
+	    
+
             /* now check whether the names match: */
             /* if vendorName not given ignore it (any vendor matches) */
 	    r = libusb_get_string_descriptor_ascii(handle, descriptor.iManufacturer & 0xff, (unsigned char*)string, sizeof(string));
@@ -397,8 +428,9 @@ static int usbOpenDevice(libusb_device_handle **device, int vendor,
                 if((productName != NULL) && (productName[0] != 0) && (strcmp(string, productName) != 0))
                     errorCode = USB_ERROR_NOTFOUND;
             }
-            if (errorCode == 0)
+            if (errorCode == 0) {
                 break;
+            }
             libusb_close(handle);
             handle = NULL;
         }
@@ -508,7 +540,7 @@ static int usbasp_open(PROGRAMMER * pgm, char * port)
     pid = USBASP_SHARED_PID;
   }
   vid = pgm->usbvid? pgm->usbvid: USBASP_SHARED_VID;
-  if (usbOpenDevice(&PDATA(pgm)->usbhandle, vid, pgm->usbvendor, pid, pgm->usbproduct) != 0) {
+  if (usbOpenDevice(&PDATA(pgm)->usbhandle, vid, pgm->usbvendor, pid, pgm->usbproduct,port) != 0) {
     /* try alternatives */
     if(strcasecmp(ldata(lfirst(pgm->id)), "usbasp") == 0) {
     /* for id usbasp autodetect some variants */
@@ -517,7 +549,7 @@ static int usbasp_open(PROGRAMMER * pgm, char * port)
 	        "use \"-C nibobee\" instead.\n",
 	        progname);
         if (usbOpenDevice(&PDATA(pgm)->usbhandle, USBASP_NIBOBEE_VID, "www.nicai-systems.com",
-		        USBASP_NIBOBEE_PID, "NIBObee") != 0) {
+                          USBASP_NIBOBEE_PID, "NIBObee",port) != 0) {
           avrdude_message(MSG_INFO, "%s: error: could not find USB device "
                           "\"NIBObee\" with vid=0x%x pid=0x%x\n",
                           progname, USBASP_NIBOBEE_VID, USBASP_NIBOBEE_PID);
@@ -527,7 +559,7 @@ static int usbasp_open(PROGRAMMER * pgm, char * port)
       }
       /* check if device with old VID/PID is available */
       if (usbOpenDevice(&PDATA(pgm)->usbhandle, USBASP_OLD_VID, "www.fischl.de",
-		             USBASP_OLD_PID, "USBasp") == 0) {
+                        USBASP_OLD_PID, "USBasp",port) == 0) {
         /* found USBasp with old IDs */
         avrdude_message(MSG_INFO, "%s: Warning: Found USB device \"USBasp\" with "
                         "old VID/PID! Please update firmware of USBasp!\n",

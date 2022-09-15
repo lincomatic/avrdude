@@ -1,3 +1,26 @@
+# AVRDUDE for multiple USBasps
+
+## Description
+- based on avrdude 7.0 sources
+
+- added support for multiple USBasp programmers.
+
+## Usage
+
+-PS - scan for all USBasps
+
+after scanning, specify port of target USBasp as displayed in the scan
+
+e.g.
+
+avrdude -c usbasp -pm328p -PS
+avrdude: *** SCL version ***
+Scanning for USBasps...
+avrdude: Found USBasp: 1:5.1:1.1:0
+avrdude: Found USBasp: 1:3.1:2.1:1.1:0
+
+avrdude -c usbasp -pm328p -P1:3.1:2.1:1.1:0
+
 # AVRDUDE
 
 [![Build Status](https://github.com/avrdudes/avrdude/actions/workflows/build.yml/badge.svg)](https://github.com/avrdudes/avrdude/actions/workflows/build.yml)
