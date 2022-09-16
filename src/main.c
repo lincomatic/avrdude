@@ -880,7 +880,7 @@ int main(int argc, char * argv [])
     avrdude_message(MSG_INFO, "\n");
     exit(1);
   }
-
+ retry_init:
   if (pgm->initpgm) {
     pgm->initpgm(pgm);
   } else {
@@ -1202,13 +1202,14 @@ int main(int argc, char * argv [])
           avrdude_message(MSG_INFO, " (probably %s)", signature_matches ? p->id : part->id);
         }
       }
-      if (ff || zz) {
+      if (ff || zz || ((sig->buf[0] == 0x00) && (sig->buf[1] == 0x01) && (sig->buf[2] == 0x02))) {
         if (++attempt < 3) {
           waittime *= 5;
           if (quell_progress < 2) {
               avrdude_message(MSG_INFO, " (retrying)\n");
           }
-          goto sig_again;
+          if ((sig->buf[1] == 0x01) && (sig->buf[2] == 0x02)) goto retry_init;
+          else goto sig_again;
         }
         if (quell_progress < 2) {
             avrdude_message(MSG_INFO, "\n");
